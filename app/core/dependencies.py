@@ -3,6 +3,9 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.config import Settings, get_app_settings
+from services.user_service import UserService
+from typing import Annotated
+from fastapi import Depends
 
 app_settings: Settings = get_app_settings()
 
@@ -30,3 +33,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db
     finally:
         await db.close()
+
+
+def get_user_service(db: Annotated[AsyncSession, Depends(get_db)]) -> UserService:
+    """Возвращает экземпляр UserService."""
+    return UserService(db_session=db)

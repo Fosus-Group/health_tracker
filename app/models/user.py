@@ -4,6 +4,8 @@ from core.config import Settings, get_app_settings
 from sqlalchemy import Boolean, Column, DateTime, String, func, ForeignKey, Float, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+import datetime
+from datetime import timedelta
 
 from models.base import Base
 
@@ -43,10 +45,22 @@ class StepRecord(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
-    steps_count = Column(Integer, nullable=False)  # Количество шагов
-    recorded_at = Column(DateTime(timezone=True), server_default=func.now())  # Дата записи
+    steps_count = Column(Integer, nullable=False)
+    recorded_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="step_records")
+
+
+class PhoneVerification(Base):
+    """Модель для хранения кодов подтверждения."""
+
+    __tablename__ = "phone_verification"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    phone_number = Column(String, nullable=False)
+    code = Column(String, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class User(Base):
