@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     smsru_api_url: str = "https://sms.ru/code/call"
 
     allowed_hosts: list[str] | None = ["localhost"]
+
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_minutes: int = 60 * 24 * 30  # месяц
+    jwt_algorithm: str = "HS256"
+    jwt_secret_key: str = "sJsdhbcd"
+    jwt_refresh_secret_key: str = "kqjsdUsd"
+
     model_config = SettingsConfigDict(env_file=os.getenv("ENV_FILE", ".env"))
 
 
