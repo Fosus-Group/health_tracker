@@ -7,6 +7,8 @@ from aiohttp import (
 )
 from core.config import Settings, get_app_settings
 import json
+import string
+from random import choice
 
 app_settings: Settings = get_app_settings()
 
@@ -22,6 +24,9 @@ class SmsRuClient:
         await self._session.close()
 
     async def make_phone_call(self, phone_number: str) -> str:
+        if app_settings.debug:
+            chars = string.digits
+            return ''.join(choice(chars) for _ in range(4))
         params = {
             "phone": phone_number,
             "ip": "-1",
@@ -32,7 +37,6 @@ class SmsRuClient:
                 if response.status != 200:
                     raise Exception("Error while making phone call")
                 response_text = await response.text()
-
                 try:
                     response_data = json.loads(response_text)
                 except json.JSONDecodeError:

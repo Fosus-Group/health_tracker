@@ -13,6 +13,7 @@ pg_connection_string = (
     f"postgresql+asyncpg://{app_settings.pg_username}:{app_settings.pg_password}@"
     f"{app_settings.pg_host}:{app_settings.pg_port}/{app_settings.pg_database}"
 )
+print(pg_connection_string)
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

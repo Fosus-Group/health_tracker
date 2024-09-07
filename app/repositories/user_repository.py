@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select, delete
-from models.user import PhoneVerification
+from models.user import PhoneVerification, User
 import uuid
 
 
@@ -9,6 +9,24 @@ class UserRepository:
 
     def __init__(self, db_session: AsyncSession) -> None:
         self.db_session = db_session
+
+    async def get_user_by_phone_number(self, phone_number: str) -> User | None:
+        """Метод для получения пользователя по номеру телефона, если пользователя нет, то вернет None."""
+        statement = select(User).where(User.phone_number == phone_number)
+        result = await self.db_session.execute(statement)
+        return result.scalars().one_or_none()
+
+    async def create_user_by_phone_number(self, phone_number: str) -> User | None:
+        """Создание пользователя в базе по номеру телефона."""
+        statement = insert(User).values(
+            id=uuid.uuid4(),
+            phone_number=phone_number,
+        ).returning(User)
+        result = await self.db_session.execute(statement)
+        new_record = result.scalars().one()
+        await self.db_session.commit()
+
+        return new_record
 
     async def create_phone_code_row(self, phone_number: str, last_4_digits: str) -> PhoneVerification:
         """Метод для создания строки с номером телефона и кода."""

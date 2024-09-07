@@ -4,6 +4,41 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 import phonenumbers
 
 
+class TokenPayload(BaseModel):
+    """Схема для хранения нагрузки токена"""
+    exp: int = Field(
+        ...,
+        description="Время жизни токена.",
+        example=[30],
+    )
+    sub: str = Field(
+        ...,
+        description="Строка идентификации токена.",
+        examples=["+79180992344"],
+    )
+
+
+class UserSchema(BaseModel):
+    """Схема пользователя."""
+
+    phone_number: str = Field(
+        ...,
+        description="Номер телефона.",
+        examples=["+79182773844"],
+    )
+    username: str | None = Field(
+        None,
+        description="Никнейм пользователя.",
+        examples=["user_1"],
+    )
+    height: int | None = Field(
+        None,
+        description="Рост пользователя.",
+        examples=[180],
+    )
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserCallSchema(BaseModel):
     """Схема для отправки заявки на звонок по номеру."""
 
@@ -33,6 +68,31 @@ class UserCallResponseSchema(BaseModel):
         ...,
         description="Статус запроса на звонок",
         examples=[True, False]
+    )
+
+
+class UserVerifyResponseSchema(BaseModel):
+    """Схема возвращаемого значения при запросе на звонок."""
+
+    success: bool = Field(
+        ...,
+        description="Статус запроса на звонок",
+        examples=[True, False]
+    )
+    error: str | None = Field(
+        None,
+        description="Индикатор ошибки.",
+        examples=["Invalid code"],
+    )
+    access_token: str | None = Field(
+        None,
+        description="Access token",
+        examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzkajbsunjwldjnc"],
+    )
+    refresh_token: str | None = Field(
+        None,
+        description="Refresh token",
+        examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzkajbsunjwldjnc"],
     )
 
 
