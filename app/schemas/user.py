@@ -34,7 +34,7 @@ class UserStepsSchema(BaseModel):
 
 class UserWeightSchema(BaseModel):
     """Схема хранения веса пользователя"""
-    weight: int = Field(
+    weight: float = Field(
         ...,
         description="Вес",
         example=[89.5]
@@ -48,7 +48,7 @@ class UserWeightSchema(BaseModel):
 
 class UserWaterSchema(BaseModel):
     """Схема хранения выпитой воды пользователя"""
-    water_amount: int = Field(
+    water_amount: float = Field(
         ...,
         description="Вода.",
         example=[3.2]
@@ -124,6 +124,7 @@ class TokenResponseSchema(BaseModel):
         description="Refresh token",
         examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzkajbsunjwldjnc"],
     )
+
 
 class UserUpdateSchema(BaseModel):
     """Схема для обновления данных пользователя."""

@@ -27,7 +27,7 @@ class UserService:
 
     async def check_if_username_exists(self, username: str) -> bool:
         """Метод для проверки существует ли пользователь в базе с таким никнеймом."""
-        user = self.user_repository.get_user_by_username(username=username)
+        user = await self.user_repository.get_user_by_username(username=username)
         return user is not None
 
     async def update_user_info(self, phone_number: str, data: UserUpdateSchema) -> UserDetailSchema:

@@ -1,15 +1,15 @@
 import logging
 from pathlib import Path
 
-from app.core.config import Settings, get_app_settings
-from app.core.exception_handler import (
+from core.config import Settings, get_app_settings
+from core.exception_handler import (
     all_exception_handler,
     custom_validation_exception_handler,
     http_exception_handler,
     starlette_http_exception_handler,
 )
-from app.core.logging_config import setup_json_logging
-from app.endpoints.api import routers
+from core.logging_config import setup_json_logging
+from endpoints.api import routers
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.staticfiles import StaticFiles
