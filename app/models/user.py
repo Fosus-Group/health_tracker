@@ -76,6 +76,6 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    weight_records = relationship("WeightRecord", back_populates="user", cascade="all, delete-orphan")
-    water_intake_records = relationship("WaterIntakeRecord", back_populates="user", cascade="all, delete-orphan")
-    step_records = relationship("StepRecord", back_populates="user", cascade="all, delete-orphan")
+    weight_records = relationship("WeightRecord", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
+    water_intake_records = relationship("WaterIntakeRecord", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
+    step_records = relationship("StepRecord", back_populates="user", cascade="all, delete-orphan", lazy="selectin")

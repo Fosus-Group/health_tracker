@@ -5,7 +5,15 @@ from datetime import timedelta
 from datetime import datetime, timezone
 from core.config import Settings, get_app_settings
 from jose import jwt
-from schemas.user import UserSchema, UserVerifyResponseSchema
+from schemas.user import (
+    UserSchema,
+    UserVerifyResponseSchema,
+    UserDetailSchema,
+    UserStepsSchema,
+    UserWeightSchema,
+    UserWaterSchema,
+    UserUpdateSchema,
+)
 
 app_settings: Settings = get_app_settings()
 
@@ -16,6 +24,56 @@ class UserService:
     def __init__(self, db_session: AsyncSession) -> None:
         self.user_repository = UserRepository(db_session=db_session)
         self.smsru_client: SmsRuClient = SmsRuClient()
+
+    async def check_if_username_exists(self, username: str) -> bool:
+        """Метод для проверки существует ли пользователь в базе с таким никнеймом."""
+        user = await self.user_repository.get_user_by_username(username=username)
+        return user is not None
+
+    async def update_user_info(self, phone_number: str, data: UserUpdateSchema) -> UserDetailSchema:
+        """Метод для обновления полей пользователя."""
+        update_data = data.dict(exclude_unset=True)
+        updated_user = await self.user_repository.update_user_info(phone_number, update_data)
+
+        steps = [
+            UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at)
+            for step in updated_user.step_records]
+        weight = [
+            UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at)
+            for weight_record in updated_user.weight_records]
+        water = [
+            UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at)
+            for water_record in updated_user.water_intake_records
+        ]
+
+        return UserDetailSchema(
+            phone_number=updated_user.phone_number,
+            username=updated_user.username,
+            height=updated_user.height,
+            steps=steps,
+            weight=weight,
+            water=water
+        )
+
+    async def get_full_info_about_user(self, phone_number: str) -> UserDetailSchema:
+        """Метод для получения полной информации о пользователе."""
+        user_data = await self.user_repository.get_user_full_data(phone_number=phone_number)
+
+        steps = [UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at) for step in
+                 user_data.step_records]
+        weight = [UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at) for weight_record
+                  in user_data.weight_records]
+        water = [UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at) for
+                 water_record in user_data.water_intake_records]
+
+        return UserDetailSchema(
+            phone_number=user_data.phone_number,
+            username=user_data.username,
+            height=user_data.height,
+            steps=steps,
+            weight=weight,
+            water=water
+        )
 
     async def get_user_by_phone_number(self, phone_number: str) -> UserSchema | None:
         """Метод для получения пользователя по номеру телефона."""
@@ -64,7 +122,7 @@ class UserService:
         )
 
     async def create_jwt_token(self, subject: str, is_refresh: bool, expires_delta: timedelta = None) -> str:
-        """Метод для генерирования access токена."""
+        """Метод для генерирования токена."""
         expire_minutes = app_settings.refresh_token_expire_minutes if is_refresh else app_settings.access_token_expire_minutes
         jwt_key = app_settings.jwt_refresh_secret_key if is_refresh else app_settings.jwt_secret_key
 
