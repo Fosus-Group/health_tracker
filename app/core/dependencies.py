@@ -3,13 +3,11 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.config import Settings, get_app_settings
-from repositories.user_repository import UserRepository
 from services.user_service import UserService
-from schemas.user import UserSchema, TokenPayload
-from models.user import User
+from schemas.user import UserSchema, TokenPayloadSchema
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from jose import jwt
 from datetime import datetime
 from pydantic import ValidationError
@@ -50,14 +48,34 @@ def get_user_service(db: Annotated[AsyncSession, Depends(get_db)]) -> UserServic
 
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth_scheme),
     user_service: UserService = Depends(get_user_service),
 ) -> UserSchema:
+    is_refresh_endpoint = request.url.path == "/api/user/refresh"
+
+    secret_key = app_settings.jwt_refresh_secret_key if is_refresh_endpoint else app_settings.jwt_secret_key
     try:
         payload = jwt.decode(
-            token, app_settings.jwt_secret_key, algorithms=[app_settings.jwt_algorithm]
+            token, secret_key, algorithms=[app_settings.jwt_algorithm]
         )
-        token_data = TokenPayload(**payload)
+        token_data = TokenPayloadSchema(**payload)
+
+        # Если это не /refresh и токен не является access-токеном, выбрасываем ошибку
+        if not is_refresh_endpoint and secret_key == app_settings.jwt_refresh_secret_key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Если это /refresh и токен не является refresh-токеном
+        if is_refresh_endpoint and secret_key == app_settings.jwt_secret_key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type for refresh",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         if datetime.fromtimestamp(token_data.exp) < datetime.now():
             raise HTTPException(
