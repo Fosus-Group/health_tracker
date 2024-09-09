@@ -3,15 +3,12 @@
 .gitignore
 .gitattributes
 
-
 # CI
 .codeclimate.yml
 .travis.yml
 .taskcluster.yml
 
 # Docker
-docker-compose.yml
-Dockerfile
 .docker
 .dockerignore
 
@@ -40,8 +37,6 @@ var/
 *.egg
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -70,20 +65,5 @@ docs/_build/
 # PyBuilder
 target/
 
-# Virtual environment
+# Virtual environment (убрали игнорирование папки venv)
 .env
-.venv/
-venv/
-
-# PyCharm
-.idea
-
-# Python mode for VIM
-.ropeproject
-**/.ropeproject
-
-# Vim swap files
-**/*.swp
-
-# VS Code
-.vscode/

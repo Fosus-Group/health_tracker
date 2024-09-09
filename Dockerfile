@@ -1,42 +1,52 @@
-# Stage 1: Builder stage
+# Этап 1: Сборочный этап
 FROM python:3.12 AS builder
 
-WORKDIR /app/
+# Создаем рабочую директорию /src для исходного кода и /venv для виртуального окружения
+WORKDIR /src/
 
-# Copy the pyproject.toml
+# Копируем только необходимые файлы для установки зависимостей
 COPY pyproject.toml ./
 
-# Install PDM and create a virtual environment manually
+# Устанавливаем PDM и создаем виртуальное окружение вручную в /venv
 RUN pip install pdm \
-    && python -m venv /app/venv \
-    && . /app/venv/bin/activate \
-    && pdm install 
-    
-# Stage 2: Final stage
+    && python -m venv /venv \
+    && . /venv/bin/activate \
+    && pdm install --production
+
+# Этап 2: Финальный этап
 FROM python:3.12
 
-WORKDIR /app/
+# Рабочая директория для приложения /src
+WORKDIR /src/
 
-# Copy the installed virtual environment from the builder stage
-COPY --from=builder /app/venv /app/venv
+# Копируем установленное виртуальное окружение с первого этапа в /venv
+COPY --from=builder /venv /venv
 
-# Copy the rest of the application files
+# Копируем остальные файлы приложения в /src
 COPY . .
 
-# Verify that alembic.ini exists
-RUN ls -l app/alembic.ini
+# Устанавливаем переменные окружения для активации виртуального окружения и добавляем PYTHONPATH
+ENV VIRTUAL_ENV=/venv
+ENV PATH="/venv/bin:$PATH"
+ENV PYTHONPATH="/src"
 
-# Install Alembic
+# Устанавливаем необходимые системные зависимости
+RUN apt-get update && apt-get install -y tree
+
+# Выводим структуру директорий для отладки
+RUN tree
+
+# Проверяем, что файл alembic.ini существует
+RUN ls -l /src/alembic.ini
+
+# Устанавливаем Alembic для управления миграциями
 RUN pip install alembic
 
-# Set environment variables to activate the virtual environment and add PYTHONPATH
-ENV VIRTUAL_ENV=/app/venv
-ENV PATH="/app/venv/bin:$PATH"
-ENV PYTHONPATH="/app"
+# Применяем миграции Alembic
+RUN alembic upgrade head
 
-# Apply Alembic migrations
-RUN alembic -c app/alembic.ini upgrade head
-
-# Expose port and run the application
+# Открываем необходимый порт
 EXPOSE 80
-ENTRYPOINT ["uvicorn", "main:app", "--host=0.0.0.0", "--port=80"]
+
+# Запускаем приложение через Uvicorn
+CMD ["uvicorn", "main:app", "--host=0.0.0.0", "--port=80"]
