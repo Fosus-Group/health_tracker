@@ -37,13 +37,13 @@ RUN apt-get update && apt-get install -y tree
 RUN tree
 
 # Проверяем, что файл alembic.ini существует
-RUN ls -l /src/alembic.ini
+RUN ls -la
 
 # Устанавливаем Alembic для управления миграциями
 RUN pip install alembic
 
 # Применяем миграции Alembic
-RUN alembic upgrade head
+RUN alembic -c /src/app/alembic.ini upgrade head
 
 # Открываем необходимый порт
 EXPOSE 80
