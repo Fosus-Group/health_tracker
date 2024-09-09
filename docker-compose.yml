@@ -1,6 +1,4 @@
-version: '3'
 services:
-
   postgres:
     image: postgres:16.3
     environment:
@@ -9,3 +7,24 @@ services:
       POSTGRES_PASSWORD: example
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:example@postgres:5432/health_tracker
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
