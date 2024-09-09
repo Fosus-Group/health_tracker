@@ -2,13 +2,13 @@ services:
   postgres:
     image: postgres:16.3
     environment:
-      POSTGRES_DB: health_tracker
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: example
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USERNAME}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${PG_PORT}:${PG_PORT}"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-U", "${PG_USERNAME}"]
       interval: 10s
       retries: 5
     volumes:
@@ -22,7 +22,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://postgres:example@postgres:5432/health_tracker
+      DATABASE_URL: postgresql+asyncpg://${PG_USERNAME}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}      
     volumes:
       - app-data:/app
 
