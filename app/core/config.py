@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     environment: str = "production"
 
-    debug: bool = False
+    debug: bool = True
 
     docs_url: str = "/api/docs"
     openapi_url: str = "/api/openapi.json"
