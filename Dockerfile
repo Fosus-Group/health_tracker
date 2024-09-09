@@ -36,13 +36,16 @@ RUN apt-get update && apt-get install -y tree
 # Выводим структуру директорий для отладки
 RUN tree
 
-# Проверяем, что файл alembic.ini существует
-RUN ls -la
+WORKDIR /src/app
 
 # Устанавливаем Alembic для управления миграциями
 RUN pip install alembic
 
+# Проверяем, что файл alembic.ini существует
+RUN ls -la
+
 # Применяем миграции Alembic
+
 RUN alembic -c /src/app/alembic.ini upgrade head
 
 # Открываем необходимый порт
