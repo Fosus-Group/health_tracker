@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     pg_password: str = "example"
     pool_size: int = 20
 
+    enable_cors: bool = True
+    cors_origins: list[str] = ["*"]
+
     allowed_hosts: list[str] | None = ["localhost"]
     model_config = SettingsConfigDict(env_file=os.getenv("ENV_FILE", ".env"))
 

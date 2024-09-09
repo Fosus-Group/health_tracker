@@ -45,7 +45,6 @@ RUN pip install alembic
 RUN ls -la
 
 # Применяем миграции Alembic
-
 RUN alembic -c /src/app/alembic.ini upgrade head
 
 # Открываем необходимый порт
