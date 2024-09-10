@@ -1,10 +1,8 @@
 services:
   postgres:
     image: postgres:16.3
-    environment:
-      POSTGRES_DB: ${PG_DATABASE}
-      POSTGRES_USER: ${PG_USERNAME}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "${PG_PORT}:${PG_PORT}"
     healthcheck:
@@ -13,6 +11,8 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - service_healthy_net
 
   app:
     build: .
@@ -21,12 +21,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${PG_USERNAME}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DATABASE}      
+      DATABASE_URL: postgresql+asyncpg://${PG_USERNAME}:${PG_PASSWORD}@postgres:${PG_PORT}/${PG_DATABASE}     
     volumes:
       - app-data:/app
+    networks:
+      - service_healthy_net
 
 volumes:
   postgres_data:
   app-data:
     driver: local
+
+networks:
+  service_healthy_net:
