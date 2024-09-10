@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "sJsdhbcd"
     jwt_refresh_secret_key: str = "kqjsdUsd"
 
+    enable_cors: bool = True
+    cors_origins: list[str] = ["*"]
+
     model_config = SettingsConfigDict(env_file=os.getenv("ENV_FILE", ".env"))
 
 
