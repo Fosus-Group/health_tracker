@@ -1,11 +1,39 @@
-version: '3'
 services:
-
   postgres:
     image: postgres:16.3
-    environment:
-      POSTGRES_DB: health_tracker
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: example
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
+      - "${PG_PORT}:${PG_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${PG_USERNAME}"]
+      interval: 10s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - service_healthy_net
+
+  app:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${PG_USERNAME}:${PG_PASSWORD}@postgres:${PG_PORT}/${PG_DATABASE}     
+    volumes:
+      - app-data:/app
+    networks:
+      - service_healthy_net
+
+volumes:
+  postgres_data:
+  app-data:
+    driver: local
+
+networks:
+  service_healthy_net:
