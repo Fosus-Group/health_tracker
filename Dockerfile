@@ -33,16 +33,16 @@ ENV PYTHONPATH="/src"
 WORKDIR /src/app
 
 # Install PostgreSQL client tools (to get pg_isready)
-RUN apt-get update && apt-get install -y postgresql-client
+# RUN apt-get update && apt-get install -y postgresql-client
 
 # Check that the alembic.ini file exists
-RUN ls -la
+# RUN ls -la
 
 # Copy the wait script into the container
-COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
-RUN chmod +x /usr/local/bin/wait-for-it.sh
+# COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+# RUN chmod +x /usr/local/bin/wait-for-it.sh
 
 # Expose the necessary port
 EXPOSE 80
 
-CMD ["sh", "-c", "/usr/local/bin/wait-for-it.sh postgres:5432 -- alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80"]

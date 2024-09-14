@@ -12,7 +12,8 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${PG_USERNAME}"]
       interval: 10s
-      retries: 5
+      timeout: 5s
+      retries: 5      
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -23,13 +24,12 @@ services:
     ports:
       - "80:80"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres        
     env_file:
       - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://${PG_USERNAME}:${PG_PASSWORD}@postgres:${PG_PORT}/${PG_DATABASE}
-    command: ["sh", "-c", "wait-for-it.sh postgres:5432 -- alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80"]
+    # command: ["sh", "-c", "wait-for-it.sh postgres:5432 -- alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80"]
     volumes:
       - app-data:/app
     networks:
