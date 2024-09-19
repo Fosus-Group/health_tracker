@@ -1,54 +1,48 @@
 # Этап 1: Сборочный этап
 FROM python:3.12 AS builder
 
-# Создаем рабочую директорию /src для исходного кода и /venv для виртуального окружения
+# Create a working directory /src for the source code and /venv for the virtual environment
 WORKDIR /src/
 
-# Копируем только необходимые файлы для установки зависимостей
+# Copy only the necessary files for installing dependencies
 COPY pyproject.toml ./
 
-# Устанавливаем PDM и создаем виртуальное окружение вручную в /venv
+# Install PDM and manually create a virtual environment in /venv
 RUN pip install pdm \
     && python -m venv /venv \
     && . /venv/bin/activate \
     && pdm install --production
 
-# Этап 2: Финальный этап
+# Stage 2: Final Stage
 FROM python:3.12
 
-# Рабочая директория для приложения /src
+# Working directory for the application /src
 WORKDIR /src/
 
-# Копируем установленное виртуальное окружение с первого этапа в /venv
+# Copy the installed virtual environment from the first stage into /venv
 COPY --from=builder /venv /venv
 
-# Копируем остальные файлы приложения в /src
+# Copy the rest of the application files into /src
 COPY . .
 
-# Устанавливаем переменные окружения для активации виртуального окружения и добавляем PYTHONPATH
+# Set environment variables to activate the virtual environment and add PYTHONPATH
 ENV VIRTUAL_ENV=/venv
 ENV PATH="/venv/bin:$PATH"
 ENV PYTHONPATH="/src"
 
-# Устанавливаем необходимые системные зависимости
-RUN apt-get update && apt-get install -y tree
-
-# Выводим структуру директорий для отладки
-RUN tree
-
 WORKDIR /src/app
 
-# Устанавливаем Alembic для управления миграциями
-RUN pip install alembic
+# Install PostgreSQL client tools (to get pg_isready)
+# RUN apt-get update && apt-get install -y postgresql-client
 
-# Проверяем, что файл alembic.ini существует
-RUN ls -la
+# Check that the alembic.ini file exists
+# RUN ls -la
 
-# Применяем миграции Alembic
-RUN alembic -c /src/app/alembic.ini upgrade head
+# Copy the wait script into the container
+# COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+# RUN chmod +x /usr/local/bin/wait-for-it.sh
 
-# Открываем необходимый порт
+# Expose the necessary port
 EXPOSE 80
 
-# Запускаем приложение через Uvicorn
-CMD ["uvicorn", "main:app", "--host=0.0.0.0", "--port=80"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 80"]
