@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from repositories.user_repository import UserRepository
 from integrations.smsru.client import SmsRuClient
+from integrations.yandex.client import YandexClient
 from datetime import timedelta
 from datetime import datetime, timezone
 from core.config import Settings, get_app_settings
@@ -14,6 +15,7 @@ from schemas.user import (
     UserWaterSchema,
     UserUpdateSchema,
 )
+from fastapi import UploadFile
 
 app_settings: Settings = get_app_settings()
 
@@ -72,7 +74,8 @@ class UserService:
             height=user_data.height,
             steps=steps,
             weight=weight,
-            water=water
+            water=water,
+            avatar_hex=user_data.avatar_hex,
         )
 
     async def get_user_by_phone_number(self, phone_number: str) -> UserSchema | None:
@@ -134,3 +137,11 @@ class UserService:
         to_encode = {"exp": expires_delta, "sub": subject}
         encoded_jwt = jwt.encode(to_encode, jwt_key, app_settings.jwt_algorithm)
         return encoded_jwt
+
+    async def update_user_avatar(self, file: UploadFile, phone_number: str) -> bool:
+        """Метод для загрузки аватарки в object storage."""
+        async with YandexClient() as client:
+            file_name = await client.upload_file(file)
+        user = await self.get_user_by_phone_number(phone_number=phone_number)
+        await self.user_repository.update_avatar(user_id=user.id, file_name=file_name)
+        return True

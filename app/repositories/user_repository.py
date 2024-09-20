@@ -1,7 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert, select, delete
+from sqlalchemy import insert, select, delete, update
 from sqlalchemy.orm import selectinload
-from models.user import PhoneVerification, User, WaterIntakeRecord, WeightRecord, StepRecord
+from models.user import (
+    PhoneVerification,
+    User,
+    WaterIntakeRecord,
+    WeightRecord,
+    StepRecord,
+)
 import uuid
 
 
@@ -121,3 +127,17 @@ class UserRepository:
         await self.db_session.commit()
 
         return True
+
+    async def update_avatar(self, user_id: uuid.UUID, file_name: str) -> User:
+        """Метод для создания или обновления аватара пользователя в БД."""
+
+        statement = (
+            update(User)
+            .where(User.id == user_id)
+            .values(avatar_hex=file_name)
+            .returning(User)
+        )
+        result = await self.db_session.execute(statement)
+        updated_record = result.scalars().one()
+        await self.db_session.commit()
+        return updated_record

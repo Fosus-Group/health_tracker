@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -63,6 +64,10 @@ class UserWaterSchema(BaseModel):
 class UserSchema(BaseModel):
     """Схема пользователя."""
 
+    id: uuid.UUID = Field(
+        ...,
+        description="Идентификатор пользователя."
+    )
     phone_number: str = Field(
         ...,
         description="Номер телефона.",
@@ -72,6 +77,11 @@ class UserSchema(BaseModel):
         None,
         description="Никнейм пользователя.",
         examples=["user_1"],
+    )
+    avatar_hex: str | None = Field(
+        None,
+        description="Идентификатор аватара.",
+        examples=["ff0ad7eceafa401295cde43ca33a6606"]
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -87,6 +97,11 @@ class UserDetailSchema(BaseModel):
         None,
         description="Никнейм пользователя.",
         examples=["user_1"],
+    )
+    avatar_hex: str | None = Field(
+        None,
+        description="Идентификатор аватара.",
+        examples=["ff0ad7eceafa401295cde43ca33a6606"]
     )
     height: int | None = Field(
         None,
@@ -177,7 +192,7 @@ class UserCallSchema(BaseModel):
         return v
 
 
-class UserCallResponseSchema(BaseModel):
+class BaseResponseSchema(BaseModel):
     """Схема возвращаемого значения при запросе на звонок."""
 
     success: bool = Field(
