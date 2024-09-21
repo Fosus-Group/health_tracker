@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from repositories.user_repository import UserRepository
 from integrations.smsru.client import SmsRuClient
+from integrations.yandex.client import YandexClient
 from datetime import timedelta
 from datetime import datetime, timezone
 from core.config import Settings, get_app_settings
@@ -14,6 +15,7 @@ from schemas.user import (
     UserWaterSchema,
     UserUpdateSchema,
 )
+from fastapi import UploadFile
 
 app_settings: Settings = get_app_settings()
 
@@ -35,44 +37,21 @@ class UserService:
         update_data = data.dict(exclude_unset=True)
         updated_user = await self.user_repository.update_user_info(phone_number, update_data)
 
-        steps = [
-            UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at)
-            for step in updated_user.step_records]
-        weight = [
-            UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at)
-            for weight_record in updated_user.weight_records]
-        water = [
-            UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at)
-            for water_record in updated_user.water_intake_records
-        ]
-
         return UserDetailSchema(
             phone_number=updated_user.phone_number,
             username=updated_user.username,
             height=updated_user.height,
-            steps=steps,
-            weight=weight,
-            water=water
         )
 
     async def get_full_info_about_user(self, phone_number: str) -> UserDetailSchema:
         """Метод для получения полной информации о пользователе."""
         user_data = await self.user_repository.get_user_full_data(phone_number=phone_number)
 
-        steps = [UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at) for step in
-                 user_data.step_records]
-        weight = [UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at) for weight_record
-                  in user_data.weight_records]
-        water = [UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at) for
-                 water_record in user_data.water_intake_records]
-
         return UserDetailSchema(
             phone_number=user_data.phone_number,
             username=user_data.username,
             height=user_data.height,
-            steps=steps,
-            weight=weight,
-            water=water
+            avatar_hex=user_data.avatar_hex,
         )
 
     async def get_user_by_phone_number(self, phone_number: str) -> UserSchema | None:
@@ -134,3 +113,11 @@ class UserService:
         to_encode = {"exp": expires_delta, "sub": subject}
         encoded_jwt = jwt.encode(to_encode, jwt_key, app_settings.jwt_algorithm)
         return encoded_jwt
+
+    async def update_user_avatar(self, file: UploadFile, phone_number: str) -> bool:
+        """Метод для загрузки аватарки в object storage."""
+        async with YandexClient() as client:
+            file_name = await client.upload_file(file)
+        user = await self.get_user_by_phone_number(phone_number=phone_number)
+        await self.user_repository.update_avatar(user_id=user.id, file_name=file_name)
+        return True

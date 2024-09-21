@@ -1,7 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert, select, delete
+from sqlalchemy import insert, select, delete, update
 from sqlalchemy.orm import selectinload
-from models.user import PhoneVerification, User, WaterIntakeRecord, WeightRecord, StepRecord
+from models.user import (
+    PhoneVerification,
+    User,
+    WaterIntakeRecord,
+    WeightRecord,
+    StepRecord,
+)
 import uuid
 
 
@@ -28,30 +34,6 @@ class UserRepository:
         if "height" in update_data:
             user.height = update_data["height"]
 
-        if "steps" in update_data:
-            new_steps = StepRecord(
-                user_id=user.id,
-                steps_count=update_data["steps"]["steps_count"],
-                recorded_at=update_data["steps"]["recorded_at"]
-            )
-            self.db_session.add(new_steps)
-
-        if "weight" in update_data:
-            new_weight = WeightRecord(
-                user_id=user.id,
-                weight=update_data["weight"]["weight"],
-                recorded_at=update_data["weight"]["recorded_at"]
-            )
-            self.db_session.add(new_weight)
-
-        if "water" in update_data:
-            new_water = WaterIntakeRecord(
-                user_id=user.id,
-                water_amount=update_data["water"]["water_amount"],
-                recorded_at=update_data["water"]["recorded_at"]
-            )
-            self.db_session.add(new_water)
-
         await self.db_session.commit()
         await self.db_session.refresh(user)
 
@@ -62,11 +44,6 @@ class UserRepository:
         statement = (
             select(User)
             .where(User.phone_number == phone_number, User.is_deleted == False)
-            .options(
-                selectinload(User.step_records),
-                selectinload(User.weight_records),
-                selectinload(User.water_intake_records)
-            )
         )
         result = await self.db_session.execute(statement)
         return result.scalars().one_or_none()
@@ -121,3 +98,17 @@ class UserRepository:
         await self.db_session.commit()
 
         return True
+
+    async def update_avatar(self, user_id: uuid.UUID, file_name: str) -> User:
+        """Метод для создания или обновления аватара пользователя в БД."""
+
+        statement = (
+            update(User)
+            .where(User.id == user_id)
+            .values(avatar_hex=file_name)
+            .returning(User)
+        )
+        result = await self.db_session.execute(statement)
+        updated_record = result.scalars().one()
+        await self.db_session.commit()
+        return updated_record

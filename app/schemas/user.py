@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -63,6 +64,10 @@ class UserWaterSchema(BaseModel):
 class UserSchema(BaseModel):
     """Схема пользователя."""
 
+    id: uuid.UUID = Field(
+        ...,
+        description="Идентификатор пользователя."
+    )
     phone_number: str = Field(
         ...,
         description="Номер телефона.",
@@ -72,12 +77,19 @@ class UserSchema(BaseModel):
         None,
         description="Никнейм пользователя.",
         examples=["user_1"],
+    )
+    avatar_hex: str | None = Field(
+        None,
+        description="Идентификатор аватара.",
+        examples=["ff0ad7eceafa401295cde43ca33a6606"]
     )
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class UserDetailSchema(BaseModel):
+    """Схема для показа полей пользователя."""
+
     phone_number: str = Field(
         ...,
         description="Номер телефона.",
@@ -88,25 +100,15 @@ class UserDetailSchema(BaseModel):
         description="Никнейм пользователя.",
         examples=["user_1"],
     )
+    avatar_hex: str | None = Field(
+        None,
+        description="Идентификатор аватара.",
+        examples=["ff0ad7eceafa401295cde43ca33a6606"]
+    )
     height: int | None = Field(
         None,
         description="Рост пользователя.",
         examples=[180],
-    )
-    steps: list[UserStepsSchema] | None = Field(
-        None,
-        description="Массив данных о шагах пользователя.",
-        examples=[{"steps_count": 4355, "recorded_at": "2020-03-14"}]
-    )
-    weight: list[UserWeightSchema] | None = Field(
-        None,
-        description="Массив данных о весе пользователя.",
-        examples=[{"weight": 89.5, "recorded_at": "2020-03-15"}]
-    )
-    water: list[UserWaterSchema] | None = Field(
-        None,
-        description="Массив данных о выпитой воде пользователя.",
-        examples=[{"water_amount": 4.1, "recorded_at": "2020-03-16"}]
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -138,21 +140,6 @@ class UserUpdateSchema(BaseModel):
         description="Рост пользователя.",
         examples=[180],
     )
-    steps: UserStepsSchema | None = Field(
-        None,
-        description="Данные о шагах пользователя.",
-        examples=[{"steps_count": 4355, "recorded_at": "2020-03-14"}]
-    )
-    weight: UserWeightSchema | None = Field(
-        None,
-        description="Данные о весе пользователя.",
-        examples=[{"weight": 89.5, "recorded_at": "2020-03-15"}]
-    )
-    water: UserWaterSchema | None = Field(
-        None,
-        description="Данные о выпитой воде пользователя.",
-        examples=[{"water_amount": 4.1, "recorded_at": "2020-03-16"}]
-    )
 
 
 class UserCallSchema(BaseModel):
@@ -177,7 +164,7 @@ class UserCallSchema(BaseModel):
         return v
 
 
-class UserCallResponseSchema(BaseModel):
+class BaseResponseSchema(BaseModel):
     """Схема возвращаемого значения при запросе на звонок."""
 
     success: bool = Field(

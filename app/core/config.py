@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "sJsdhbcd"
     jwt_refresh_secret_key: str = "kqjsdUsd"
 
+    s3_key: str = "kajndhccu"
+    s3_secret: str = "ooqjndydndk"
+    bucket_name: str = "bucket.name"
+
     enable_cors: bool = True
     cors_origins: list[str] = ["*"]
 

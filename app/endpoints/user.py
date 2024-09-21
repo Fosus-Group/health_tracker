@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from core.dependencies import get_user_service, get_current_user, oauth_scheme
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File
 from schemas.user import (
     UserCallSchema,
-    UserCallResponseSchema,
+    BaseResponseSchema,
     UserVerifySchema,
     UserVerifyResponseSchema,
     UserSchema,
@@ -22,11 +22,11 @@ router = APIRouter(prefix="/user", tags=["Пользователи."])
 @router.post(
     "/call",
     status_code=status.HTTP_200_OK,
-    response_model=UserCallResponseSchema,
+    response_model=BaseResponseSchema,
     summary="Запрос на авторизацию по номеру телефона.",
     responses={
         200: {
-            "model": UserCallResponseSchema,
+            "model": BaseResponseSchema,
             "description": "Запрос успешно отправлен.",
         },
         422: {
@@ -39,10 +39,10 @@ router = APIRouter(prefix="/user", tags=["Пользователи."])
 async def make_phone_call(
     user_service: Annotated[UserService, Depends(get_user_service)],
     phone_to_call: UserCallSchema,
-) -> UserCallResponseSchema:
+) -> BaseResponseSchema:
     """Эндпоинт для запроса на отправку на номер телефона."""
     result: bool = await user_service.phone_call(phone_number=phone_to_call.phone_number)
-    return UserCallResponseSchema(success=result)
+    return BaseResponseSchema(success=result)
 
 
 @router.post(
@@ -163,3 +163,29 @@ async def update_user_info(
                 detail="Пользователь с таким username уже существует.",
             )
     return await user_service.update_user_info(phone_number=user.phone_number, data=user_update_data)
+
+
+@router.put(
+    "/upload",
+    status_code=status.HTTP_200_OK,
+    summary="Загрузка файла в Yandex Object Storage",
+    responses={
+        200: {
+            "description": "Файл успешно загружен",
+            "model": BaseResponseSchema,
+        },
+        400: {"description": "Ошибка при загрузке файла"},
+        500: {"description": "Внутренняя ошибка сервера"},
+    }
+)
+async def upload_file_to_yandex(
+    file: Annotated[UploadFile, File(...)],
+    user: UserSchema = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+) -> BaseResponseSchema:
+    """Эндпоинт для загрузки аватарки."""
+    is_updated: bool = await user_service.update_user_avatar(
+        file=file,
+        phone_number=user.phone_number,
+    )
+    return BaseResponseSchema(success=is_updated)
