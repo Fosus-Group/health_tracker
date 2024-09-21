@@ -37,44 +37,20 @@ class UserService:
         update_data = data.dict(exclude_unset=True)
         updated_user = await self.user_repository.update_user_info(phone_number, update_data)
 
-        steps = [
-            UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at)
-            for step in updated_user.step_records]
-        weight = [
-            UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at)
-            for weight_record in updated_user.weight_records]
-        water = [
-            UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at)
-            for water_record in updated_user.water_intake_records
-        ]
-
         return UserDetailSchema(
             phone_number=updated_user.phone_number,
             username=updated_user.username,
             height=updated_user.height,
-            steps=steps,
-            weight=weight,
-            water=water
         )
 
     async def get_full_info_about_user(self, phone_number: str) -> UserDetailSchema:
         """Метод для получения полной информации о пользователе."""
         user_data = await self.user_repository.get_user_full_data(phone_number=phone_number)
 
-        steps = [UserStepsSchema(steps_count=step.steps_count, recorded_at=step.recorded_at) for step in
-                 user_data.step_records]
-        weight = [UserWeightSchema(weight=weight_record.weight, recorded_at=weight_record.recorded_at) for weight_record
-                  in user_data.weight_records]
-        water = [UserWaterSchema(water_amount=water_record.water_amount, recorded_at=water_record.recorded_at) for
-                 water_record in user_data.water_intake_records]
-
         return UserDetailSchema(
             phone_number=user_data.phone_number,
             username=user_data.username,
             height=user_data.height,
-            steps=steps,
-            weight=weight,
-            water=water,
             avatar_hex=user_data.avatar_hex,
         )
 
