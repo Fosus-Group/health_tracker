@@ -54,7 +54,6 @@ class YandexClient:
         try:
             async with self._session.put(f"https://storage.yandexcloud.net/{app_settings.bucket_name}/{file_name}",
                                          headers=headers, data=file.file) as response:
-                print(await response.text())
                 if response.status != 200:
                     raise Exception(f"Failed to upload file: {response.status} - {await response.text()}")
                 return file_name

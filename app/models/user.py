@@ -4,8 +4,6 @@ from core.config import Settings, get_app_settings
 from sqlalchemy import Boolean, Column, DateTime, String, func, ForeignKey, Float, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-import datetime
-from datetime import timedelta
 
 from models.base import Base
 
