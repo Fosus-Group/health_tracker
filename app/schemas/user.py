@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 import phonenumbers
@@ -16,48 +15,6 @@ class TokenPayloadSchema(BaseModel):
         ...,
         description="Строка идентификации токена.",
         examples=["+79180992344"],
-    )
-
-
-class UserStepsSchema(BaseModel):
-    """Схема хранения шагов пользователя"""
-    steps_count: int = Field(
-        ...,
-        description="Количество шагов",
-        example=[9783]
-    )
-    recorded_at: datetime = Field(
-        ...,
-        description="Дата в которую были пройдены шаги",
-        example=["2020-05-01T00:00:00Z"]
-    )
-
-
-class UserWeightSchema(BaseModel):
-    """Схема хранения веса пользователя"""
-    weight: float = Field(
-        ...,
-        description="Вес",
-        example=[89.5]
-    )
-    recorded_at: datetime = Field(
-        ...,
-        description="Дата в которую был записан вес",
-        example=["2020-05-01"]
-    )
-
-
-class UserWaterSchema(BaseModel):
-    """Схема хранения выпитой воды пользователя"""
-    water_amount: float = Field(
-        ...,
-        description="Вода.",
-        example=[3.2]
-    )
-    recorded_at: datetime = Field(
-        ...,
-        description="Дата в которую было записано количество воды.",
-        example=["2020-05-01"]
     )
 
 
@@ -165,7 +122,7 @@ class UserCallSchema(BaseModel):
 
 
 class BaseResponseSchema(BaseModel):
-    """Схема возвращаемого значения при запросе на звонок."""
+    """Схема возвращаемого значения при ответе от эндпоинта."""
 
     success: bool = Field(
         ...,

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from core.config import Settings, get_app_settings
 from services.user_service import UserService
+from services.stats_service import StatsService
 from schemas.user import UserSchema, TokenPayloadSchema
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
@@ -45,6 +46,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 def get_user_service(db: Annotated[AsyncSession, Depends(get_db)]) -> UserService:
     """Возвращает экземпляр UserService."""
     return UserService(db_session=db)
+
+
+def get_stats_service(db: Annotated[AsyncSession, Depends(get_db)]) -> StatsService:
+    """Возвращает экземпляр StatsService."""
+    return StatsService(db_session=db)
 
 
 async def get_current_user(

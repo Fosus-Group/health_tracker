@@ -1,13 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select, delete, update
-from sqlalchemy.orm import selectinload
-from models.user import (
-    PhoneVerification,
-    User,
-    WaterIntakeRecord,
-    WeightRecord,
-    StepRecord,
-)
+from models.user import PhoneVerification, User
 import uuid
 
 

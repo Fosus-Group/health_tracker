@@ -10,9 +10,6 @@ from schemas.user import (
     UserSchema,
     UserVerifyResponseSchema,
     UserDetailSchema,
-    UserStepsSchema,
-    UserWeightSchema,
-    UserWaterSchema,
     UserUpdateSchema,
 )
 from fastapi import UploadFile
