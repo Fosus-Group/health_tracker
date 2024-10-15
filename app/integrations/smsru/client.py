@@ -44,7 +44,7 @@ class SmsRuClient:
 
                 if response_data.get("status") == "OK":
                     last_4_digits = response_data.get("code")
-                    return last_4_digits
+                    return str(last_4_digits)
                 else:
                     raise Exception(f"Error in response: {response_data}")
         except (
