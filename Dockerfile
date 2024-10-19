@@ -48,7 +48,6 @@ EXPOSE 80
 
 # Создаем нового пользователя и выполняем команды от его имени
 RUN useradd -m appuser
-USER appuser
 
 # Создаем скрипт для запуска
 RUN echo '#!/bin/sh' > /src/start.sh && \
@@ -56,4 +55,4 @@ RUN echo '#!/bin/sh' > /src/start.sh && \
     echo 'uvicorn main:app --host 0.0.0.0 --port 80' >> /src/start.sh && \
     chmod +x /src/start.sh
 
-CMD ["/src/start.sh"]
+CMD ["/bin/sh", "/src/start.sh"]

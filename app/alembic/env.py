@@ -8,8 +8,11 @@ from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+def escape_percent_signs(connection_string: str) -> str:
+    return connection_string.replace('%', '%%')
+
 app_settings = get_settings_no_cache()
-pg_connection_string = (
+pg_connection_string = escape_percent_signs(
     f"postgresql+asyncpg://{app_settings.pg_username}:{app_settings.pg_password}@"
     f"{app_settings.pg_host}:{app_settings.pg_port}/{app_settings.pg_database}"
 )
