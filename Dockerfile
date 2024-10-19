@@ -8,7 +8,7 @@ WORKDIR /src/
 COPY pyproject.toml ./
 
 # Install PDM and manually create a virtual environment in /venv
-RUN pip install pdm \
+RUN pip install --no-cache-dir pdm \
     && python -m venv /venv \
     && . /venv/bin/activate \
     && pdm install --production
@@ -33,16 +33,22 @@ ENV PYTHONPATH="/src"
 WORKDIR /src/app
 
 # Install PostgreSQL client tools (to get pg_isready)
-RUN apt-get update && apt-get install -y postgresql-client
+RUN apt-get update && apt-get install -y postgresql-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Добавляем переменные окружения для подключения к базе данных
-ENV PG_HOST=${PG_HOST:-localhost}
-ENV PG_PORT=${PG_PORT:-5432}
+ENV PG_HOST=${PG_HOST:-rc1b-nj3ubmon8dl2it6r.mdb.yandexcloud.net}
+ENV PG_PORT=${PG_PORT:-6432}
 ENV PG_DATABASE=${PG_DATABASE:-health_tracker}
-ENV PG_USERNAME=${PG_USERNAME:-postgres}
+ENV PG_USERNAME=${PG_USERNAME:-health_tracker_db}
 ENV PG_PASSWORD=${PG_PASSWORD:-example}
 
 EXPOSE 80
+
+# Создаем нового пользователя и выполняем команды от его имени
+RUN useradd -m appuser
+USER appuser
 
 # Создаем скрипт для запуска
 RUN echo '#!/bin/sh' > /src/start.sh && \

@@ -15,12 +15,12 @@ from httpx import AsyncClient, ASGITransport
 get_app_settings.cache_clear()
 settings = get_app_settings()
 
-os.environ["PG_HOST"] = "localhost"
-os.environ["PG_PORT"] = "5432"
-os.environ["PG_USER"] = "postgres"
-os.environ["PG_PASSWORD"] = "example"
-os.environ["PG_DATABASE"] = "health_tracker"
-os.environ["DEBUG"] = "True"
+# os.environ["PG_HOST"] = "localhost"
+# os.environ["PG_PORT"] = "5432"
+# os.environ["PG_USER"] = "postgres"
+# os.environ["PG_PASSWORD"] = "example"
+# os.environ["PG_DATABASE"] = "health_tracker"
+# os.environ["DEBUG"] = "True"
 
 
 @pytest.fixture(scope="session")
