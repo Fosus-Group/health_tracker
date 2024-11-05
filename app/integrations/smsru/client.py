@@ -25,8 +25,7 @@ class SmsRuClient:
 
     async def make_phone_call(self, phone_number: str) -> str:
         if app_settings.debug:
-            chars = string.digits
-            return ''.join(choice(chars) for _ in range(4))
+            return "0000"
         params = {
             "phone": phone_number,
             "ip": "-1",
