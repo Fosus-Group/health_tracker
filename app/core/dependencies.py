@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.config import Settings, get_app_settings
+from services.follower_service import FollowerService
 from services.user_service import UserService
 from services.stats_service import StatsService
 from schemas.user import UserSchema, TokenPayloadSchema
@@ -51,6 +52,11 @@ def get_user_service(db: Annotated[AsyncSession, Depends(get_db)]) -> UserServic
 def get_stats_service(db: Annotated[AsyncSession, Depends(get_db)]) -> StatsService:
     """Возвращает экземпляр StatsService."""
     return StatsService(db_session=db)
+
+
+def get_follow_service(db: Annotated[AsyncSession, Depends(get_db)]) -> FollowerService:
+    """Возвращает экземпляр FollowerService."""
+    return FollowerService(db_session=db)
 
 
 async def get_current_user(

@@ -25,8 +25,7 @@ class SmsRuClient:
 
     async def make_phone_call(self, phone_number: str) -> str:
         if app_settings.debug:
-            chars = string.digits
-            return ''.join(choice(chars) for _ in range(4))
+            return "0000"
         params = {
             "phone": phone_number,
             "ip": "-1",
@@ -44,7 +43,7 @@ class SmsRuClient:
 
                 if response_data.get("status") == "OK":
                     last_4_digits = response_data.get("code")
-                    return last_4_digits
+                    return str(last_4_digits)
                 else:
                     raise Exception(f"Error in response: {response_data}")
         except (
