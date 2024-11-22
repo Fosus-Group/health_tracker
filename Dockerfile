@@ -1,58 +1,68 @@
 # Этап 1: Сборочный этап
-FROM python:3.12 AS builder
+FROM python:3.12.4 AS builder
 
-# Create a working directory /src for the source code and /venv for the virtual environment
 WORKDIR /src/
 
-# Copy only the necessary files for installing dependencies
-COPY pyproject.toml ./
+# Копирование pyproject.toml и pdm.lock
+COPY pyproject.toml pdm.lock ./
 
-# Install PDM and manually create a virtual environment in /venv
-RUN pip install --no-cache-dir pdm \
-    && python -m venv /venv \
-    && . /venv/bin/activate \
-    && pdm install --production
+# Установка переменной окружения для создания виртуального окружения в проекте
+ENV PDM_VENV_IN_PROJECT=1
 
-# Stage 2: Final Stage
-FROM python:3.12
+# Установка зависимостей с PDM
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir pdm && \
+    PDM_IGNORE_ACTIVE_VENV=1 pdm install --production -v && \
+    ls -al /src/.venv
 
-# Working directory for the application /src
-WORKDIR /src/
+# Очистка кэша PDM
+RUN rm -rf ~/.cache/pdm
 
-# Copy the installed virtual environment from the first stage into /venv
-COPY --from=builder /venv /venv
+# Этап 2: Финальный образ
+FROM python:3.12.4
 
-# Copy the rest of the application files into /src
+WORKDIR /src
+
+# Копирование виртуального окружения из сборочного этапа
+COPY --from=builder /src/.venv /venv
+
+# Копирование остального кода приложения
 COPY . .
 
-# Set environment variables to activate the virtual environment and add PYTHONPATH
+# Установка PostgreSQL клиента
+RUN apt-get update && apt-get install -y postgresql-client && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Настройка переменных окружения для Python и приложения
 ENV VIRTUAL_ENV=/venv
 ENV PATH="/venv/bin:$PATH"
 ENV PYTHONPATH="/src"
 
-WORKDIR /src/app
+# Переменные окружения для подключения к базе данных
+ARG PG_HOST=rc1b-nj3ubmon8dl2it6r.mdb.yandexcloud.net
+ARG PG_PORT=6432
+ARG PG_DATABASE=health_tracker
+ARG PG_USERNAME=health_tracker_db
+ARG PG_PASSWORD=example
 
-# Install PostgreSQL client tools (to get pg_isready)
-RUN apt-get update && apt-get install -y postgresql-client && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+ENV PG_HOST=${PG_HOST}
+ENV PG_PORT=${PG_PORT}
+ENV PG_DATABASE=${PG_DATABASE}
+ENV PG_USERNAME=${PG_USERNAME}
+ENV PG_PASSWORD=${PG_PASSWORD}
 
-# Добавляем переменные окружения для подключения к базе данных
-ENV PG_HOST=${PG_HOST:-rc1b-nj3ubmon8dl2it6r.mdb.yandexcloud.net}
-ENV PG_PORT=${PG_PORT:-6432}
-ENV PG_DATABASE=${PG_DATABASE:-health_tracker}
-ENV PG_USERNAME=${PG_USERNAME:-health_tracker_db}
-ENV PG_PASSWORD=${PG_PASSWORD:-example}
-
+# Открытие порта
 EXPOSE 80
 
-# Создаем нового пользователя и выполняем команды от его имени
-RUN useradd -m appuser
+# Создание непривилегированного пользователя
+# RUN useradd -m appuser
+# USER appuser
 
-# Создаем скрипт для запуска
+# Создание скрипта запуска
 RUN echo '#!/bin/sh' > /src/start.sh && \
     echo 'alembic upgrade head' >> /src/start.sh && \
     echo 'uvicorn main:app --host 0.0.0.0 --port 80' >> /src/start.sh && \
     chmod +x /src/start.sh
 
+# Указание команды запуска контейнера
 CMD ["/bin/sh", "/src/start.sh"]

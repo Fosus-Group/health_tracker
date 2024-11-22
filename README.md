@@ -25,3 +25,5 @@ docker-compose exec postgres psql -U postgres -d health_tracker
 health_tracker=# \dt
 ```
 #### This command will display the current tables in the `health_tracker` database.
+
+pdm lock --platform linux --append

@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     summary: str = ""
     description: str = "Приложение для отслеживания здоровья"
 
-    pg_host: str = "localhost"
-    pg_port: str = "5432"
-    pg_database: str = "health_tracker"
-    pg_username: str = "postgres"
-    pg_password: str = "example"
+    pg_host: str = os.getenv("PG_HOST", "localhost")
+    pg_port: str = os.getenv("PG_PORT", "5432")
+    pg_database: str = os.getenv("PG_DATABASE", "health_tracker")
+    pg_username: str = os.getenv("PG_USERNAME", "postgres")
+    pg_password: str = os.getenv("PG_PASSWORD", "example")
     pool_size: int = 20
 
     smsru_api_id: str = "smsruapiid"
