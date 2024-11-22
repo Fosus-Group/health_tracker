@@ -26,4 +26,6 @@ health_tracker=# \dt
 ```
 #### This command will display the current tables in the `health_tracker` database.
 
-pdm lock --platform linux --append
+pdm lock --platform manylinux_2_36_aarch64 --append --python=3.12.4
+
+docker build --progress=plain --no-cache -t health_tracker .   
