@@ -1,10 +1,11 @@
 # Этап 1: Сборочный этап
 FROM python:3.12.4-alpine AS builder
 
-WORKDIR /src/
-
 # Установка инструментов сборки для Alpine
 RUN apk add --no-cache gcc musl-dev libffi-dev postgresql-dev
+
+# Установка рабочей директории
+WORKDIR /app/
 
 # Копирование файлов pyproject.toml и pdm.lock
 COPY pyproject.toml pdm.lock ./
@@ -16,7 +17,7 @@ ENV PDM_VENV_IN_PROJECT=1
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir pdm && \
     PDM_IGNORE_ACTIVE_VENV=1 pdm install --production -v && \
-    ls -al /src/.venv
+    ls -al /app/.venv
 
 # Очистка кэша PDM
 RUN rm -rf ~/.cache/pdm
@@ -24,13 +25,14 @@ RUN rm -rf ~/.cache/pdm
 # Этап 2: Финальный образ
 FROM python:3.12.4-alpine
 
-WORKDIR /src
+# Установка рабочей директории
+WORKDIR /app
 
 # Установка PostgreSQL клиента
 RUN apk add --no-cache libpq
 
 # Копирование виртуального окружения из сборочного этапа
-COPY --from=builder /src/.venv /venv
+COPY --from=builder /app/.venv /venv
 
 # Копирование остального кода приложения
 COPY . .
@@ -38,7 +40,7 @@ COPY . .
 # Настройка окружения
 ENV VIRTUAL_ENV=/venv
 ENV PATH="/venv/bin:$PATH"
-ENV PYTHONPATH="/src"
+ENV PYTHONPATH="/app:/app/app"
 
 # Переменные для подключения к базе данных
 ARG PG_HOST=rc1b-nj3ubmon8dl2it6r.mdb.yandexcloud.net
@@ -57,10 +59,11 @@ ENV PG_PASSWORD=${PG_PASSWORD}
 EXPOSE 80
 
 # Создание скрипта запуска
-RUN echo '#!/bin/sh' > /src/start.sh && \
-    echo 'alembic upgrade head' >> /src/start.sh && \
-    echo 'uvicorn main:app --host 0.0.0.0 --port 80' >> /src/start.sh && \
-    chmod +x /src/start.sh
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'cd /app/app' >> /app/start.sh && \
+    echo 'alembic -c alembic.ini upgrade head' >> /app/start.sh && \
+    echo 'cd /app && uvicorn app.main:app --host 0.0.0.0 --port 80' >> /app/start.sh && \
+    chmod +x /app/start.sh
 
 # Указание команды запуска
-CMD ["/bin/sh", "/src/start.sh"]
+CMD ["/bin/sh", "/app/start.sh"]
